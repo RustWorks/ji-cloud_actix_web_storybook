@@ -33,13 +33,19 @@ impl AnimationPlayer {
                 });
 
                 html!("canvas" => web_sys::HtmlCanvasElement, {
-                    .style_signal("opacity", state.controller.hidden.signal().map(|hidden| {
-                        if hidden {
-                            "0"
-                        } else {
-                            "1"
-                        }
-                    }))
+                    .future(state.controller.hidden.signal().for_each(clone!(state => move |hidden| {
+                        state.repaint_for_hidden(hidden);
+                        async move {}
+                    })))
+                    // doesn't work, things get weird, unfortunately...
+                    // .style_signal("opacity", state.controller.hidden.signal().map(|hidden| {
+                    //     log::info!("hidden: {}", hidden);
+                    //     if hidden {
+                    //         "0"
+                    //     } else {
+                    //         "1"
+                    //     }
+                    // }))
                     .style("cursor", if state.controller.interactive {"pointer"} else {"initial"})
                     .style("display", "block")
                     .style("position", "absolute")
@@ -52,9 +58,11 @@ impl AnimationPlayer {
                     .after_inserted(clone!(state, size => move |elem| {
                         let (natural_width, natural_height) = size;
 
+
                         elem.set_width(natural_width as u32);
                         elem.set_height(natural_height as u32);
-                        *state.paint_ctx.borrow_mut() = Some(get_2d_context(&elem, None).unwrap_ji());
+                        let paint_ctx = get_2d_context(&elem, None).unwrap_ji();
+                        *state.paint_ctx.borrow_mut() = Some(paint_ctx);
 
 
                         let canvas:HtmlCanvasElement = web_sys::window().unwrap_ji().document().unwrap_ji().create_element("canvas").unwrap_ji().unchecked_into();

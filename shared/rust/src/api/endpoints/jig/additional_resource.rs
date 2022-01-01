@@ -2,7 +2,8 @@ use crate::{
     api::Method,
     domain::{
         jig::additional_resource::{
-            AdditionalResourceCreateRequest, AdditionalResourceId, AdditionalResourceResponse,
+            AdditionalResource, AdditionalResourceCreateRequest, AdditionalResourceId,
+            AdditionalResourceUpdateRequest,
         },
         CreateResponse,
     },
@@ -23,7 +24,7 @@ use super::ApiEndpoint;
 pub struct GetDraft;
 impl ApiEndpoint for GetDraft {
     type Req = ();
-    type Res = AdditionalResourceResponse;
+    type Res = AdditionalResource;
     type Err = EmptyError;
     const PATH: &'static str = "/v1/jig/{id}/draft/additional-resource/{additional_resource_id}";
     const METHOD: Method = Method::Get;
@@ -41,7 +42,7 @@ impl ApiEndpoint for GetDraft {
 pub struct GetLive;
 impl ApiEndpoint for GetLive {
     type Req = ();
-    type Res = AdditionalResourceResponse;
+    type Res = AdditionalResource;
     type Err = EmptyError;
     const PATH: &'static str = "/v1/jig/{id}/live/additional-resource/{additional_resource_id}";
     const METHOD: Method = Method::Get;
@@ -65,6 +66,26 @@ impl ApiEndpoint for Create {
     type Err = EmptyError;
     const PATH: &'static str = "/v1/jig/{id}/draft/additional-resource";
     const METHOD: Method = Method::Post;
+}
+
+/// Update an additional resources to a draft JIG.
+///
+/// # Authorization
+///
+/// * Standard + [`UserScope::ManageJig`](crate::domain::user::UserScope)
+///
+/// # Errors
+///
+/// * [`Unauthorized`](http::StatusCode::UNAUTHORIZED) if authorization is not valid.
+/// * [`Forbidden`](http::StatusCode::FORBIDDEN) if the user does not have sufficient permission to perform the action.
+/// * [`BadRequest`](http::StatusCode::BAD_REQUEST) if the request is missing/invalid.
+pub struct Update;
+impl ApiEndpoint for Update {
+    type Req = AdditionalResourceUpdateRequest;
+    type Res = ();
+    type Err = EmptyError;
+    const PATH: &'static str = "/v1/jig/{id}/draft/additional-resource/{additional_resource_id}";
+    const METHOD: Method = Method::Patch;
 }
 
 /// Delete an additional resource URL from a draft JIG.

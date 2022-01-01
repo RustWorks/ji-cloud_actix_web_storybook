@@ -1,4 +1,5 @@
 use crate::base::state::Base;
+use awsm_web::audio::AudioHandle;
 use components::module::_groups::cards::lookup::Side;
 use futures_signals::signal::Mutable;
 use rand::prelude::*;
@@ -16,6 +17,7 @@ pub struct Game {
     pub used: RefCell<Vec<CardPairId>>,
     pub current: Mutable<Option<Rc<Current>>>,
     pub rounds_played: AtomicUsize,
+    pub audio: RefCell<Option<AudioHandle>>,
 }
 
 #[derive(Clone, Debug)]
@@ -27,10 +29,10 @@ pub struct CardId {
     pub pair_id: usize,
 }
 
-#[derive(Clone)]
 pub struct Current {
     pub target: CardId,
     pub others: Vec<CardId>,
+    pub incorrect_choices: RefCell<Vec<usize>>,
     pub side: Side,
     pub phase: Mutable<CurrentPhase>,
 }
@@ -39,7 +41,6 @@ pub struct Current {
 pub enum CurrentPhase {
     Waiting,
     Correct(usize),
-    Wrong(usize),
 }
 
 impl Game {
@@ -51,6 +52,7 @@ impl Game {
             rng: RefCell::new(thread_rng()),
             current: Mutable::new(None),
             rounds_played: AtomicUsize::new(0),
+            audio: RefCell::new(None),
         });
 
         Self::reset_deck(_self.clone());
@@ -125,6 +127,7 @@ impl Current {
         Rc::new(Self {
             target,
             others,
+            incorrect_choices: RefCell::new(Vec::new()),
             side,
             phase: Mutable::new(CurrentPhase::Waiting),
         })

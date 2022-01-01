@@ -11,16 +11,11 @@ expression: body
   "authorName": "Bobby Tables",
   "likes": 0,
   "plays": 0,
-  "firstCoverAssigned": false,
+  "jigFocus": "modules",
   "jigData": {
     "draftOrLive": "Live",
     "displayName": "",
-    "modules": [
-      {
-        "id": "[id]",
-        "kind": "Cover"
-      }
-    ],
+    "modules": [],
     "ageRanges": [],
     "affiliations": [],
     "goals": [],
@@ -41,6 +36,14 @@ expression: body
       "feedbackPositive": "[audio]",
       "feedbackNegative": "[audio]"
     },
-    "privacyLevel": "unlisted"
+    "privacyLevel": "unlisted",
+    "locked": false,
+    "otherKeywords": "",
+    "translatedKeywords": ""
+  },
+  "adminData": {
+    "rating": null,
+    "blocked": false,
+    "curated": false
   }
 }

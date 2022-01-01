@@ -1,5 +1,6 @@
 //! Types for additional resources for JIGs.
 
+use crate::domain::{audio::AudioId, image::ImageId, meta::ResourceTypeId, pdf::PdfId};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -9,32 +10,76 @@ use uuid::Uuid;
 #[cfg_attr(feature = "backend", sqlx(transparent))]
 pub struct AdditionalResourceId(pub Uuid);
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 /// Over-the-wire representation of a JIG additional resource.
 pub struct AdditionalResource {
     /// The additional resources's ID.
     pub id: AdditionalResourceId,
 
-    /// The URL of the additional resource.
-    /// Stored as a `String`.
-    pub url: String,
+    /// Name for additional resource
+    pub display_name: String,
+
+    /// Type of additional resource
+    pub resource_type_id: ResourceTypeId,
+
+    /// Content of additional resource
+    #[serde(flatten)]
+    pub resource_content: ResourceContent,
 }
 
 /// Request to create a new `AdditionalResource`.
 ///
 /// [`additional_resource::Create`](crate::api::endpoints::jig::additional_resource::Create)
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct AdditionalResourceCreateRequest {
-    /// The URL of the additional resource.
-    /// Stored as a `String`.
-    pub url: String,
+    /// Display name for additional resource
+    pub display_name: String,
+
+    /// Type of additional resource
+    pub resource_type_id: ResourceTypeId,
+
+    /// Value of additional resource
+    #[serde(flatten)]
+    pub resource_content: ResourceContent,
 }
 
-/// Response for successfully requesting an additional resource.
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AdditionalResourceResponse {
-    /// The additional resource found.
-    pub url: String,
+/// Request to update an `AdditionalResource`.
+///
+/// [`additional_resource::Update`](crate::api::endpoints::jig::additional_resource::Update)
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AdditionalResourceUpdateRequest {
+    /// resource display name
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub display_name: Option<String>,
+
+    /// Type of additional  resource
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub resource_type_id: Option<ResourceTypeId>,
+
+    /// Kind of additional resource
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    #[serde(flatten)]
+    pub resource_content: Option<ResourceContent>,
+}
+
+/// Value of additional resource
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum ResourceContent {
+    /// Additional resource kind: image
+    ImageId(ImageId),
+    /// Additional resource kind: audioFile
+    AudioId(AudioId),
+    /// Additional resource kind: link
+    Link(url::Url),
+    /// Additional resource kind: pdf
+    PdfId(PdfId),
 }
 
 into_uuid![AdditionalResourceId];

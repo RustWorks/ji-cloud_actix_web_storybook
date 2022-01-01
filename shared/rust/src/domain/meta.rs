@@ -34,6 +34,12 @@ pub struct AgeRangeId(pub Uuid);
 #[cfg_attr(feature = "backend", sqlx(transparent))]
 pub struct AffiliationId(pub Uuid);
 
+/// Wrapper type around [`Uuid`], represents [`AdditionalResource::id`].
+#[derive(Hash, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Debug)]
+#[cfg_attr(feature = "backend", derive(sqlx::Type))]
+#[cfg_attr(feature = "backend", sqlx(transparent))]
+pub struct ResourceTypeId(pub Uuid);
+
 /// Wrapper type around [`Uuid`], represents [`Subject::id`].
 #[derive(Hash, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "backend", derive(sqlx::Type))]
@@ -50,9 +56,10 @@ into_uuid!(
     ImageStyleId,
     AnimationStyleId,
     AffiliationId,
+    ResourceTypeId,
     AgeRangeId,
     SubjectId,
-    GoalId
+    GoalId,
 );
 
 /// Wrapper type around [`i16`](std::i16), represents the index of an image tag.
@@ -98,6 +105,22 @@ pub struct AnimationStyle {
     pub updated_at: Option<DateTime<Utc>>,
 }
 
+/// Represents an image style.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PdfStyle {
+    /// The id of the image style.
+    pub id: ImageStyleId,
+
+    /// The image style's name.
+    pub display_name: String,
+
+    /// When the image style was created.
+    pub created_at: DateTime<Utc>,
+
+    /// When the image style was last updated.
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
 /// Represents a age range.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct AgeRange {
@@ -127,6 +150,22 @@ pub struct Affiliation {
     pub created_at: DateTime<Utc>,
 
     /// When the affiliation was last updated.
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+/// Represents an additional resource.
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct ResourceType {
+    /// The id of the additional resource.
+    pub id: ResourceTypeId,
+
+    /// The additional resource name.
+    pub display_name: String,
+
+    /// When the age range was created.
+    pub created_at: DateTime<Utc>,
+
+    /// When the age range was last updated.
     pub updated_at: Option<DateTime<Utc>>,
 }
 
@@ -196,6 +235,9 @@ pub struct MetadataResponse {
     /// All affiliations the server has.
     pub affiliations: Vec<Affiliation>,
 
+    /// All additional resources the server has.
+    pub resource_types: Vec<ResourceType>,
+
     /// All subjects the server has.
     pub subjects: Vec<Subject>,
 
@@ -211,6 +253,9 @@ pub struct MetadataResponse {
 pub enum MetaKind {
     /// [`Affiliation`]
     Affiliation,
+
+    /// [`ResourceType`]
+    ResourceType,
 
     /// [`ImageStyle`]
     ImageStyle,

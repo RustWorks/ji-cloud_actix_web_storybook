@@ -6,8 +6,13 @@ use super::state::Sticker;
 impl Sticker {
     pub fn render(self) -> Dom {
         match self {
-            Self::Image(state) => state.render(),
-            Self::Animation(state) => state.render(),
+            Self::Image(state) => {
+                log::info!("image");
+                state.render()
+            },
+            Self::Animation(state) => {
+                state.render()
+            },
         }
     }
 }

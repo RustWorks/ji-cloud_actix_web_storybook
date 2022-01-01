@@ -23,6 +23,7 @@ impl IframeDom {
             }))
             .style("width", "100%")
             .style("height", "100%")
+            .style("border", "none")
             .property_signal("src", is_loading.signal().map(clone!(jig_id, module_id, module_kind => move |loading| {
 
                 if loading {

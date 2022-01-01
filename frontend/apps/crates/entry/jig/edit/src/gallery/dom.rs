@@ -1,4 +1,4 @@
-use super::{actions, state::*};
+use super::{state::*};
 use components::module::_common::thumbnail::ModuleThumbnail;
 use components::page_header::state::PageLinks;
 use components::{page_footer, page_header};
@@ -11,8 +11,6 @@ use utils::ages::AgeRangeVecExt;
 use utils::jig::published_at_string;
 use utils::prelude::*;
 
-pub struct GalleryDom {}
-
 const STR_DELETE: &'static str = "Delete";
 const STR_DUPLICATE: &'static str = "Duplicate";
 const STR_SEARCH: &'static str = "Search";
@@ -20,7 +18,12 @@ const STR_SHOW_JIG_ALL: &'static str = "Show all my JIGs";
 const STR_SHOW_JIG_PUBLISHED: &'static str = "Show published JIGs";
 const STR_SHOW_JIG_DRAFT: &'static str = "Show drafts";
 
-impl GalleryDom {
+const STR_DELETE_TITLE: &'static str = "Warning";
+const STR_DELETE_CONTENT: &'static str = "Are you sure you want to delete this JIG?";
+const STR_DELETE_CONFIRM: &'static str = "Delete JIG";
+const STR_DELETE_CANCEL: &'static str = "Don't delete";
+
+impl JigGallery {
     fn visible_jigs_option_string(visible_jigs: &VisibleJigs) -> &'static str {
         match visible_jigs {
             VisibleJigs::All => STR_SHOW_JIG_ALL,
@@ -29,36 +32,55 @@ impl GalleryDom {
         }
     }
 
-    pub fn render() -> Dom {
-        let state = Rc::new(State::new());
+    pub fn render(self: Rc<Self>) -> Dom {
+        let state = self;
 
-        actions::load_data(state.clone());
+        state.load_data();
 
         html!("empty-fragment", {
             .child(page_header::dom::render(Rc::new(page_header::state::State::new()), None, Some(PageLinks::Create)))
+            .child_signal(state.confirm_delete.signal().map(clone!(state => move |confirm_delete| {
+                confirm_delete.map(|jig_id| {
+                    html!("modal-confirm", {
+                        .property("dangerous", true)
+                        .property("title", STR_DELETE_TITLE)
+                        .property("content", STR_DELETE_CONTENT)
+                        .property("cancel_text", STR_DELETE_CANCEL)
+                        .property("confirm_text", STR_DELETE_CONFIRM)
+                        .event(clone!(state => move |_evt: events::CustomCancel| state.confirm_delete.set_neq(None)))
+                        .event(clone!(state => move |_evt: events::CustomConfirm| {
+                            state.confirm_delete.set_neq(None);
+                            state.delete_jig(jig_id);
+                        }))
+                    })
+                })
+            })))
             .child(
                 html!("jig-gallery", {
+                    .property("jigFocus", state.focus.as_str())
                     .child(html!("jig-gallery-create", {
                         .property("slot", "create-jig")
                         .event(clone!(state => move |_: events::Click| {
-                            actions::create_jig(state.clone());
+                            state.create_jig();
                         }))
                     }))
-                    .children(TEMPLATE_KINDS.iter().map(|kind| {
-                        html!("jig-gallery-template", {
-                            .property("slot", "jig-templates")
-                            .property("kind", *kind)
-                        })
-                    }))
+                    .apply_if(state.focus.is_modules(), move |dom| {
+                        dom.children(TEMPLATE_KINDS.iter().map(|kind| {
+                            html!("jig-gallery-template", {
+                                .property("slot", "jig-templates")
+                                .property("kind", *kind)
+                            })
+                        }))
+                    })
                     .child(html!("input-search", {
                         .property("slot", "search-input")
                         .property("placeholder", STR_SEARCH)
                         .event(clone!(state => move |evt: events::CustomSearch| {
                             let value = evt.query();
                             if !value.is_empty() {
-                                actions::search_jigs(state.clone(), value);
+                                state.search_jigs(value);
                             } else {
-                                actions::load_jigs_regular(state.clone());
+                                state.load_jigs_regular();
                             }
                         }))
                     }))
@@ -79,7 +101,7 @@ impl GalleryDom {
                                 .event(clone!(state, option => move |evt: events::CustomSelectedChange| {
                                     if evt.selected() {
                                         state.visible_jigs.set(option.clone());
-                                        actions::load_jigs_regular(state.clone());
+                                        state.load_jigs_regular();
                                     }
                                 }))
                             })
@@ -94,8 +116,14 @@ impl GalleryDom {
                         let jig_ages = jig.jig_data.age_ranges.clone();
                         html!("jig-gallery-recent", {
                             .property("slot", "recent-items")
-                            .property("href", jig.id.0.to_string())
                             .property("label", jig.jig_data.display_name.clone())
+                            .property("href", {
+                                String::from(Route::Jig(JigRoute::Edit(
+                                    jig.id,
+                                    jig.jig_focus,
+                                    JigEditRoute::Landing
+                                )))
+                            })
                             .property_signal("ages", state.age_ranges.signal_cloned().map(move|age_ranges| {
                                 age_ranges.range_string(&jig_ages)
                             }))
@@ -112,7 +140,7 @@ impl GalleryDom {
                             .child(ModuleThumbnail::render(
                                 Rc::new(ModuleThumbnail {
                                     jig_id: jig.id.clone(),
-                                    module: jig.jig_data.modules[0].clone(),
+                                    module: jig.jig_data.modules.first().cloned(),
                                     is_jig_fallback: true,
                                 }),
                                 Some("thumbnail")
@@ -123,7 +151,7 @@ impl GalleryDom {
                                     .property("icon", "duplicate")
                                     .text(STR_DUPLICATE)
                                     .event(clone!(state, jig => move |_: events::Click| {
-                                        actions::copy_jig(state.clone(), &jig.id);
+                                        state.copy_jig(&jig.id);
                                     }))
                                 }),
                                 html!("menu-line", {
@@ -131,7 +159,7 @@ impl GalleryDom {
                                     .property("icon", "delete")
                                     .text(STR_DELETE)
                                     .event(clone!(state, jig => move |_: events::Click| {
-                                        actions::delete_jig(state.clone(), jig.id);
+                                        state.confirm_delete.set_neq(Some(jig.id));
                                     }))
                                 }),
                             ])

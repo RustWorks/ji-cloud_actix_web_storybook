@@ -6,6 +6,7 @@ pub(crate) mod jig;
 pub(crate) mod locale;
 pub(crate) mod media;
 pub(crate) mod meta;
+pub(crate) mod pdf;
 pub(crate) mod session;
 pub(crate) mod user;
 
@@ -13,7 +14,8 @@ use core::config::DB_POOL_CONNECTIONS;
 use shared::domain::{
     category::CategoryId,
     meta::{
-        AffiliationId, AgeRangeId, AnimationStyleId, GoalId, ImageStyleId, ImageTagIndex, SubjectId,
+        AffiliationId, AgeRangeId, AnimationStyleId, GoalId, ImageStyleId, ImageTagIndex,
+        ResourceTypeId, SubjectId,
     },
 };
 use sqlx::{
@@ -38,6 +40,7 @@ pub const UPLOADS_DB_SCHEMA: &[(&str, &str, &str)] = &[
         "global_animation_upload",
         "animation_id",
     ),
+    ("user_pdf_library", "user_pdf_upload", "pdf_id"),
 ];
 
 pub async fn get_pool(connect_options: PgConnectOptions) -> anyhow::Result<PgPool> {
@@ -57,6 +60,10 @@ trait Metadata: Into<Uuid> + Copy {
 
 impl Metadata for AffiliationId {
     const TABLE: &'static str = "affiliation";
+}
+
+impl Metadata for ResourceTypeId {
+    const TABLE: &'static str = "resource_type";
 }
 
 impl Metadata for ImageStyleId {

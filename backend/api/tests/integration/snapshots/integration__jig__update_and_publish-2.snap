@@ -11,7 +11,7 @@ expression: body
   "authorName": "Bobby Tables",
   "likes": 0,
   "plays": 0,
-  "firstCoverAssigned": false,
+  "jigFocus": "modules",
   "jigData": {
     "draftOrLive": "Draft",
     "displayName": "draft name",
@@ -39,6 +39,14 @@ expression: body
       "feedbackPositive": [],
       "feedbackNegative": []
     },
-    "privacyLevel": "unlisted"
+    "privacyLevel": "unlisted",
+    "locked": false,
+    "otherKeywords": "",
+    "translatedKeywords": ""
+  },
+  "adminData": {
+    "rating": null,
+    "blocked": false,
+    "curated": false
   }
 }

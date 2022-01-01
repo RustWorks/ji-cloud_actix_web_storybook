@@ -18,9 +18,14 @@ export class _ extends LitElement {
             homeStyles,
             css`
                 :host {
+                    --padding: 88px;
+
                     display: block;
                     background-color: var(--light-blue-6);
-                    padding: 88px 0;
+                    padding: var(--padding) 0;
+                }
+                :host([mode="results"]) {
+                    padding: calc(var(--padding) / 2) 0;
                 }
                 :host([mode="results"]) .home-only,
                 :host([mode="home"]) .results-only {
@@ -29,9 +34,12 @@ export class _ extends LitElement {
                 }
                 .width-holder {
                     display: grid;
-                    grid-template-columns: 1fr auto;
-                    justify-content: space-between;
+                    grid-template-columns: auto;
+                    justify-content: center;
                     align-items: center;
+                }
+                :host([mode="results"]) .width-holder {
+                    justify-content: space-between;
                 }
                 .center-1 {
                     grid-column: 1 / -1;
@@ -39,12 +47,6 @@ export class _ extends LitElement {
                 }
                 .center-2 {
                     transition: width 0.3s;
-                }
-                :host([mode="results"]) .center-2 {
-                    width: 0;
-                }
-                :host([mode="home"]) .center-2 {
-                    width: 100%;
                 }
                 .center-3 {
                     width: 1000px;
@@ -90,15 +92,9 @@ export class _ extends LitElement {
     @property({ type: Number })
     resultsCount: number = 0;
 
-    render() {
-        return html`
-            <div class="width-holder">
-                <!--
-                    3 levels of center: 
-                        1) take both grid columns
-                        2) full width in home and 0 width in result mode
-                        3) container of actual content
-                -->
+    renderSearchSection() {
+        if (this.mode === 'home') {
+            return html`
                 <div class="center-1">
                     <div class="center-2">
                         <div class="center-3">
@@ -110,7 +106,6 @@ export class _ extends LitElement {
                                 ${STR_LEARNING}
                                 <span class="creation">${STR_CREATION}</span>
                             </h1>
-                            <slot name="search-bar"></slot>
                             <h4>
                                 ${STR_MAKE_LEARNING}
                                 <span class="results-count"
@@ -118,12 +113,48 @@ export class _ extends LitElement {
                                 >
                                 ${STR_JIGS}
                             </h4>
+                            <slot name="search-bar"></slot>
                         </div>
                     </div>
                 </div>
-                <div class="help results-only">
-                    <slot name="help"></slot>
+            `;
+        } else {
+            return html`
+                <div class="center-1">
+                    <div class="center-2">
+                        <div class="center-3">
+                            <slot name="search-bar"></slot>
+                        </div>
+                    </div>
                 </div>
+            `;
+        }
+    }
+
+    renderHelp() {
+        if (this.mode !== 'results') {
+            return null;
+        }
+
+        // TODO: Enable once ready
+        return html`
+            <div class="help results-only">
+                <slot name="help"></slot>
+            </div>
+        `;
+    }
+
+    render() {
+        // 3 levels of center:
+        //  1) take both grid columns
+        //  2) full width in home and 0 width in result mode
+        //  3) container of actual content
+        return html`
+            <div class="width-holder">
+                <!--
+                -->
+                ${this.renderSearchSection()}
+                ${this.renderHelp()}
             </div>
         `;
     }

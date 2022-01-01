@@ -10,6 +10,8 @@ import {
 import "@elements/core/images/ui";
 import { mediaUi } from "@utils/path";
 import { classMap } from "lit-html/directives/class-map";
+import { nothing } from "lit-html";
+import { JigFocus } from "@elements/module/_common/types";
 
 const STR_CREATE_JIG = "Create a New JIG";
 const STR_TEMPLATE_PARAGRAPH =
@@ -174,6 +176,9 @@ export class _ extends LitElement {
     @property()
     title: string = "";
 
+    @property()
+    jigFocus: JigFocus = "modules";
+
     @internalProperty()
     private allTemplatesVisible = false;
 
@@ -206,25 +211,29 @@ export class _ extends LitElement {
                                 <slot name="jig-templates"></slot>
                             </div>
                         </div>
-                        <div class="see-all-templates-button">
-                            <button-rect
-                                kind="text"
-                                color="blue"
-                                weight="bold"
-                                @click="${() =>
-                                    (this.allTemplatesVisible =
-                                        !this.allTemplatesVisible)}"
-                            >
-                                <span>
-                                    ${this.allTemplatesVisible
-                                        ? STR_SEE_LESS_TEMPLATES
-                                        : STR_SEE_ALL_TEMPLATES}
-                                    <img-ui
-                                        path="core/_common/chevron-down-blue.svg"
-                                    ></img-ui>
-                                </span>
-                            </button-rect>
-                        </div>
+                        ${
+                            this.jigFocus === "resources" ? nothing : html`
+                                <div class="see-all-templates-button">
+                                    <button-rect
+                                        kind="text"
+                                        color="blue"
+                                        weight="bold"
+                                        @click="${() =>
+                                            (this.allTemplatesVisible =
+                                                !this.allTemplatesVisible)}"
+                                    >
+                                        <span>
+                                            ${this.allTemplatesVisible
+                                                ? STR_SEE_LESS_TEMPLATES
+                                                : STR_SEE_ALL_TEMPLATES}
+                                            <img-ui
+                                                path="core/_common/chevron-down-blue.svg"
+                                            ></img-ui>
+                                        </span>
+                                    </button-rect>
+                                </div>
+                            `
+                        }
                     </div>
                 </div>
             </section>

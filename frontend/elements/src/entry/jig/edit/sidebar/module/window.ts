@@ -27,6 +27,9 @@ export class _ extends LitElement {
                     border-radius: 16px;
                     box-sizing: border-box;
                 }
+                :host([state="empty"]) {
+                    cursor: auto;
+                }
                 :host([state="empty"]) .wrapper {
                     background-color: var(--light-blue-5);
                     color: #ffffff;
@@ -82,10 +85,10 @@ export class _ extends LitElement {
     @query(".wrapper")
     wrapper!: HTMLElement;
 
-    dragOver() {
+    addDragClass() {
         this.wrapper.classList.add("drag-over");
     }
-    dragLeave() {
+    removeDragClass() {
         this.wrapper.classList.remove("drag-over");
     }
 
@@ -94,8 +97,9 @@ export class _ extends LitElement {
         return html`
             <div
                 class="wrapper"
-                @dragover="${this.dragOver}"
-                @dragleave="${this.dragLeave}"
+                @dragover="${this.addDragClass}"
+                @dragleave="${this.removeDragClass}"
+                @drop="${this.removeDragClass}"
             >
                 ${this.state === "empty"
                     ? html`
